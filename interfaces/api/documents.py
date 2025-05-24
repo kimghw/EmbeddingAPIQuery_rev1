@@ -51,10 +51,13 @@ def get_document_retrieval_usecase(config: ConfigPort = Depends(lambda: config))
     """Dependency injection for DocumentRetrievalUseCase."""
     embedding_model = OpenAIEmbeddingAdapter(config)
     vector_store = QdrantVectorStoreAdapter()
+    retriever = SimpleRetrieverAdapter(vector_store, embedding_model)
     
     return DocumentRetrievalUseCase(
+        retriever=retriever,
         embedding_model=embedding_model,
-        vector_store=vector_store
+        vector_store=vector_store,
+        config=config
     )
 
 
@@ -162,10 +165,10 @@ async def get_document_status(
         raise HTTPException(status_code=500, detail=f"Failed to get document status: {str(e)}")
 
 
-@router.post("/search")
+@router.post("/search", response_model=DocumentSearchResponse)
 async def search_documents(
     request: DocumentSearchRequest,
-    config: ConfigPort = Depends(lambda: config)
+    usecase: DocumentRetrievalUseCase = Depends(get_document_retrieval_usecase)
 ):
     """
     Search documents using semantic similarity.
@@ -176,49 +179,15 @@ async def search_documents(
     - **document_ids**: Optional filter by specific document IDs
     """
     try:
-        start_time = time.time()
-        
-        # Create components
-        embedding_model = OpenAIEmbeddingAdapter(config)
-        vector_store = QdrantVectorStoreAdapter()
-        retriever = SimpleRetrieverAdapter(vector_store, embedding_model)
-        
-        # Set collection name
-        retriever.set_collection_name(config.get_collection_name())
-        
-        # Create query entity
-        from core.entities.document import Query
-        query = Query.create(request.query)
-        
-        # Perform search
-        results = await retriever.retrieve(
-            query=query,
+        # Use the usecase to perform search
+        result = await usecase.search_documents(
+            query_text=request.query,
             top_k=request.limit,
             score_threshold=request.threshold
         )
         
-        processing_time = time.time() - start_time
-        
-        # Convert results to response format
-        search_results = [
-            {
-                "chunk_id": result.chunk_id,
-                "document_id": result.document_id,
-                "document_title": "Unknown",  # We don't have document title in current system
-                "content": result.content,
-                "similarity_score": result.score,
-                "chunk_index": result.metadata.get("chunk_index", 0),
-                "metadata": result.metadata
-            }
-            for result in results
-        ]
-        
-        return {
-            "query": request.query,
-            "results": search_results,
-            "total_results": len(search_results),
-            "processing_time": processing_time
-        }
+        # Return the Pydantic model directly
+        return result
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")

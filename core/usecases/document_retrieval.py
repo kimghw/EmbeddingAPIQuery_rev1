@@ -8,6 +8,7 @@ from core.ports.retriever import RetrieverPort
 from core.ports.embedding_model import EmbeddingModelPort
 from core.ports.vector_store import VectorStorePort
 from config.settings import ConfigPort
+from schemas.document import DocumentSearchResponse, DocumentSearchResult
 
 
 class DocumentRetrievalUseCase:
@@ -34,7 +35,7 @@ class DocumentRetrievalUseCase:
         top_k: int = 10,
         score_threshold: Optional[float] = None,
         filter_metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    ) -> DocumentSearchResponse:
         """Search for documents using text query."""
         try:
             # Create query entity
@@ -48,33 +49,41 @@ class DocumentRetrievalUseCase:
                 filter_metadata=filter_metadata
             )
             
-            return {
-                "success": True,
-                "query_id": query.id,
-                "query_text": query_text,
-                "results_count": len(results),
-                "results": [
-                    {
-                        "document_id": result.document_id,
-                        "chunk_id": result.chunk_id,
-                        "content": result.content,
-                        "score": result.score,
-                        "rank": result.rank,
-                        "metadata": result.metadata,
-                        "is_chunk_result": result.is_chunk_result()
-                    }
-                    for result in results
-                ],
-                "retriever_type": self._retriever.get_retriever_type(),
-                "collection_name": self._retriever.get_collection_name()
-            }
+            # Convert results to Pydantic models
+            search_results = [
+                DocumentSearchResult(
+                    document_id=result.document_id,
+                    chunk_id=result.chunk_id,
+                    content=result.content,
+                    score=result.score,
+                    rank=result.rank,
+                    metadata=result.metadata,
+                    is_chunk_result=result.is_chunk_result()
+                )
+                for result in results
+            ]
+            
+            return DocumentSearchResponse(
+                success=True,
+                query_id=query.id,
+                query_text=query_text,
+                results_count=len(results),
+                results=search_results,
+                retriever_type=self._retriever.get_retriever_type(),
+                collection_name=self._retriever.get_collection_name()
+            )
             
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "query_text": query_text
-            }
+            # Return error response using Pydantic model
+            return DocumentSearchResponse(
+                success=False,
+                query_id="",
+                query_text=query_text,
+                results_count=0,
+                results=[],
+                retriever_type="error",
+                collection_name=""
+            )
     
     async def search_similar_documents(
         self, 

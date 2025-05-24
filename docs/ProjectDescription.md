@@ -66,6 +66,188 @@ PDF 문서 처리, 외부 API 데이터 수집, 벡터 임베딩 기반 문서 �
 - **어댑터(Adapters)**: 외부 시스템과의 실제 연동 구현
 - **의존성 역전**: Core는 구체적인 구현에 의존하지 않음
 
+## 데이터 플로우 아키텍처
+
+### 레이어별 데이터 타입 및 책임
+
+```
+┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐
+│ 레이어          │ 입력 타입       │ 출력 타입       │ 주요 책임       │
+├─────────────────┼─────────────────┼─────────────────┼─────────────────┤
+│ API Interface   │ Pydantic 모델   │ Pydantic 모델   │ 요청/응답 변환  │
+│ UseCase         │ 기본 타입       │ Pydantic 모델   │ 비즈니스 로직   │
+│ Adapter         │ Core 엔티티     │ Core 엔티티     │ 외부 시스템 연동│
+│ Core            │ Core 엔티티     │ Core 엔티티     │ 도메인 로직     │
+└─────────────────┴─────────────────┴─────────────────┴─────────────────┘
+```
+
+### 데이터 변환 흐름
+
+#### 1️⃣ **Core 엔티티** (순수 도메인 객체)
+```python
+# core/entities/document.py
+class Document:
+    """문서 엔티티 - 외부 의존성 없음"""
+    document_id: str
+    title: str
+    content: str
+    metadata: Dict[str, Any]
+
+class Query:
+    """검색 쿼리 엔티티"""
+    id: str
+    text: str
+    created_at: datetime
+
+class RetrievalResult:
+    """검색 결과 엔티티"""
+    document_id: str
+    chunk_id: str
+    content: str
+    score: float
+    rank: int
+```
+
+#### 2️⃣ **Adapter 레이어** (Core 엔티티 사용)
+```python
+# adapters/vector_store/qdrant_vector_store.py
+class QdrantVectorStoreAdapter:
+    async def search_similar(self, ...) -> List[RetrievalResult]:
+        """Core 엔티티 반환"""
+        
+# adapters/embedding/openai_embedding.py  
+class OpenAIEmbeddingAdapter:
+    async def embed_query(self, text: str) -> List[float]:
+        """기본 타입 반환"""
+        
+# adapters/vector_store/simple_retriever.py
+class SimpleRetrieverAdapter:
+    async def retrieve(self, query: Query, ...) -> List[RetrievalResult]:
+        """Core 엔티티 입력/출력"""
+```
+
+#### 3️⃣ **UseCase 레이어** (변환 담당)
+```python
+# core/usecases/document_retrieval.py
+class DocumentRetrievalUseCase:
+    async def search_documents(
+        self, 
+        query_text: str,  # 기본 타입 입력
+        top_k: int = 10
+    ) -> DocumentSearchResponse:  # Pydantic 모델 출력
+        
+        # 1. Core 엔티티 생성
+        query = Query.create(query_text)
+        
+        # 2. Adapter 호출 (Core 엔티티 사용)
+        results = await self._retriever.retrieve(query, top_k)
+        
+        # 3. Pydantic 모델로 변환
+        search_results = [
+            DocumentSearchResult(
+                document_id=result.document_id,
+                chunk_id=result.chunk_id,
+                content=result.content,
+                score=result.score,
+                rank=result.rank,
+                metadata=result.metadata,
+                is_chunk_result=result.is_chunk_result()
+            )
+            for result in results
+        ]
+        
+        return DocumentSearchResponse(
+            success=True,
+            query_id=query.id,
+            query_text=query_text,
+            results_count=len(results),
+            results=search_results,
+            retriever_type=self._retriever.get_retriever_type(),
+            collection_name=self._retriever.get_collection_name()
+        )
+```
+
+#### 4️⃣ **API Interface** (Pydantic 모델)
+```python
+# interfaces/api/documents.py
+@router.post("/search", response_model=DocumentSearchResponse)
+async def search_documents(
+    request: DocumentSearchRequest,  # Pydantic 입력
+    usecase: DocumentRetrievalUseCase = Depends(get_document_retrieval_usecase)
+):
+    # UseCase 호출
+    result = await usecase.search_documents(
+        query_text=request.query,
+        top_k=request.limit,
+        score_threshold=request.threshold
+    )
+    
+    # Pydantic 모델 직접 반환
+    return result  # DocumentSearchResponse
+```
+
+### 데이터 플로우의 장점
+
+#### ✅ **클린 아키텍처 원칙 준수**
+- **Core 독립성**: Core는 외부 의존성(Pydantic) 없음
+- **의존성 역전**: Adapter가 Core에 의존, Core는 외부에 의존하지 않음
+- **단일 책임**: UseCase가 변환 책임을 담당
+
+#### ✅ **타입 안정성**
+- **컴파일 타임 검증**: Pydantic을 통한 타입 검증
+- **런타임 검증**: 입력 데이터 자동 검증
+- **IDE 지원**: 자동완성 및 타입 힌트
+
+#### ✅ **유지보수성**
+- **레이어별 분리**: 각 레이어의 책임이 명확
+- **변경 영향 최소화**: Core 변경 시 Adapter만 수정
+- **테스트 용이성**: 각 레이어 독립적 테스트 가능
+
+#### ✅ **확장성**
+- **새로운 인터페이스 추가**: CLI, GraphQL 등 쉽게 추가
+- **어댑터 교체**: 벡터 저장소, 임베딩 모델 교체 용이
+- **스키마 진화**: API 버전 관리 및 하위 호환성
+
+### 실제 데이터 플로우 예시
+
+```
+1. API 요청
+   POST /documents/search
+   {
+     "query": "IMU specifications",
+     "limit": 5,
+     "threshold": 0.7
+   }
+
+2. Pydantic 검증
+   DocumentSearchRequest 모델로 자동 검증
+
+3. UseCase 호출
+   search_documents("IMU specifications", top_k=5, score_threshold=0.7)
+
+4. Core 엔티티 생성
+   Query.create("IMU specifications")
+
+5. Adapter 호출
+   retriever.retrieve(query, top_k=5) → List[RetrievalResult]
+
+6. Pydantic 변환
+   RetrievalResult → DocumentSearchResult → DocumentSearchResponse
+
+7. API 응답
+   {
+     "success": true,
+     "query_id": "uuid-123",
+     "query_text": "IMU specifications",
+     "results_count": 3,
+     "results": [...],
+     "retriever_type": "simple_retriever",
+     "collection_name": "documents"
+   }
+```
+
+이러한 데이터 플로우 설계를 통해 각 레이어의 책임을 명확히 분리하고, 타입 안정성과 유지보수성을 동시에 확보할 수 있습니다.
+
 ## 디렉터리 구조
 
 ```
@@ -347,7 +529,8 @@ COLLECTION_NAME = "documents"
 
 ---
 
-**문서 버전**: 1.0.0  
+**문서 버전**: 1.1.0  
 **최종 업데이트**: 2025-05-24  
 **작성자**: Development Team  
-**검토자**: Architecture Team
+**검토자**: Architecture Team  
+**변경 사항**: 데이터 플로우 아키텍처 추가, Pydantic 모델 통합 완료

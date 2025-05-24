@@ -58,18 +58,21 @@ class DocumentSearchRequest(BaseModel):
 
 class DocumentSearchResult(BaseModel):
     """Response schema for search result item."""
-    chunk_id: str = Field(..., description="Chunk identifier")
     document_id: str = Field(..., description="Document identifier")
-    document_title: str = Field(..., description="Document title")
+    chunk_id: str = Field(..., description="Chunk identifier")
     content: str = Field(..., description="Chunk content")
-    similarity_score: float = Field(..., description="Similarity score")
-    chunk_index: int = Field(..., description="Chunk position in document")
+    score: float = Field(..., description="Similarity score")
+    rank: int = Field(..., description="Result rank")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Chunk metadata")
+    is_chunk_result: bool = Field(True, description="Whether this is a chunk result")
 
 
 class DocumentSearchResponse(BaseModel):
     """Response schema for document search."""
-    query: str = Field(..., description="Original search query")
+    success: bool = Field(True, description="Search success status")
+    query_id: str = Field(..., description="Unique query identifier")
+    query_text: str = Field(..., description="Original search query")
+    results_count: int = Field(..., description="Number of results returned")
     results: List[DocumentSearchResult] = Field(..., description="Search results")
-    total_results: int = Field(..., description="Total number of results")
-    processing_time: float = Field(..., description="Processing time in seconds")
+    retriever_type: str = Field(..., description="Type of retriever used")
+    collection_name: str = Field(..., description="Collection name searched")
