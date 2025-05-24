@@ -101,18 +101,39 @@ class MockVectorStoreAdapter(VectorStorePort):
         if collection_name not in self.collections:
             return []
         
-        # Mock similarity search - just return first top_k embeddings
+        # Mock similarity search - return embeddings with mock scores
         results = []
         embeddings_list = list(self.embeddings[collection_name].values())
         
+        # 메타데이터 필터링 적용
+        if filter_metadata:
+            filtered_embeddings = []
+            for embedding in embeddings_list:
+                match = True
+                for key, value in filter_metadata.items():
+                    if embedding.metadata.get(key) != value:
+                        match = False
+                        break
+                if match:
+                    filtered_embeddings.append(embedding)
+            embeddings_list = filtered_embeddings
+        
+        # top_k만큼 결과 생성
         for i, embedding in enumerate(embeddings_list[:top_k]):
-            # Mock similarity score (random-ish but deterministic)
-            score = 0.9 - (i * 0.1)
+            # Mock similarity score (높은 점수부터 낮은 점수로)
+            score = 0.95 - (i * 0.05)  # 0.95, 0.90, 0.85, ...
+            
+            # 점수 임계값 필터링
+            if score_threshold is not None and score < score_threshold:
+                continue
+            
+            # 메타데이터에서 content 가져오기 (있으면)
+            content = embedding.metadata.get('content', f"Mock content for chunk {embedding.chunk_id}")
             
             result = RetrievalResult.create(
                 document_id=embedding.document_id,
                 chunk_id=embedding.chunk_id,
-                content=f"Mock content for chunk {embedding.chunk_id}",
+                content=content,
                 score=score,
                 rank=i + 1,
                 metadata=embedding.metadata

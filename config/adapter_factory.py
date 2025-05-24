@@ -82,7 +82,8 @@ class AdapterFactory:
     def create_text_chunker_adapter(
         adapter_type: str = "recursive", 
         chunk_size: int = 1000, 
-        chunk_overlap: int = 200
+        chunk_overlap: int = 200,
+        config: ConfigPort = None
     ) -> TextChunkerPort:
         """텍스트 청킹 어댑터 생성"""
         if adapter_type.lower() == "recursive":
@@ -91,10 +92,18 @@ class AdapterFactory:
                 chunk_overlap=chunk_overlap
             )
         elif adapter_type.lower() == "semantic":
-            return SemanticTextChunkerAdapter(
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap
-            )
+            # 시맨틱 청킹의 경우 실제 생성자 파라미터 사용
+            if config:
+                return SemanticTextChunkerAdapter(
+                    chunk_size=chunk_size,
+                    chunk_overlap=chunk_overlap,
+                    min_chunk_size=config.get_semantic_chunk_min_size()
+                )
+            else:
+                return SemanticTextChunkerAdapter(
+                    chunk_size=chunk_size,
+                    chunk_overlap=chunk_overlap
+                )
         # elif adapter_type.lower() == "token":
         #     return TokenTextChunkerAdapter(
         #         chunk_size=chunk_size,
@@ -108,6 +117,7 @@ class AdapterFactory:
         adapter_type: str = "simple",
         vector_store: VectorStorePort = None,
         embedding_model: EmbeddingModelPort = None,
+        config: ConfigPort = None,
         **kwargs
     ) -> RetrieverPort:
         """리트리버 어댑터 생성"""
@@ -118,10 +128,31 @@ class AdapterFactory:
         elif adapter_type.lower() == "ensemble":
             retrievers = kwargs.get('retrievers', [])
             if not retrievers:
-                raise ValueError("Ensemble retriever requires a list of retrievers")
+                # 기본 리트리버들 생성
+                if vector_store and embedding_model:
+                    retrievers = [
+                        SimpleRetrieverAdapter(vector_store, embedding_model)
+                        for _ in range(2)  # 기본 2개 리트리버
+                    ]
+                else:
+                    raise ValueError("Ensemble retriever requires retrievers or vector_store and embedding_model")
             
-            fusion_strategy = kwargs.get('fusion_strategy', FusionStrategy.RANK_FUSION)
-            weights = kwargs.get('weights', None)
+            # 설정에서 앙상블 파라미터 가져오기
+            if config:
+                weights = config.get_ensemble_weights()
+                search_types = config.get_ensemble_search_types()
+                
+                # 검색 타입에 따른 fusion strategy 결정
+                if "similarity" in search_types and "mmr" in search_types:
+                    fusion_strategy = FusionStrategy.RANK_FUSION
+                elif "weighted" in str(search_types).lower():
+                    fusion_strategy = FusionStrategy.WEIGHTED_SCORE
+                else:
+                    fusion_strategy = FusionStrategy.RANK_FUSION
+            else:
+                fusion_strategy = kwargs.get('fusion_strategy', FusionStrategy.RANK_FUSION)
+                weights = kwargs.get('weights', None)
+            
             rrf_k = kwargs.get('rrf_k', 60)
             
             return EnsembleRetrieverAdapter(
@@ -184,7 +215,8 @@ def get_text_chunker_adapter(config: ConfigPort) -> TextChunkerPort:
     return AdapterFactory.create_text_chunker_adapter(
         adapter_type=adapter_type,
         chunk_size=config.get_chunk_size(),
-        chunk_overlap=config.get_chunk_overlap()
+        chunk_overlap=config.get_chunk_overlap(),
+        config=config
     )
 
 
@@ -198,24 +230,18 @@ def get_retriever_adapter(config: ConfigPort) -> RetrieverPort:
         return AdapterFactory.create_retriever_adapter(
             adapter_type="simple",
             vector_store=vector_store,
-            embedding_model=embedding_model
+            embedding_model=embedding_model,
+            config=config
         )
     elif adapter_type.lower() == "ensemble":
-        # 기본적으로 3개의 simple retriever로 앙상블 구성
         vector_store = get_vector_store_adapter(config)
         embedding_model = get_embedding_adapter(config)
         
-        retrievers = [
-            AdapterFactory.create_retriever_adapter(
-                adapter_type="simple",
-                vector_store=vector_store,
-                embedding_model=embedding_model
-            ) for _ in range(3)
-        ]
-        
-        return AdapterFactory.create_ensemble_retriever(
-            retrievers=retrievers,
-            fusion_strategy="rank_fusion"
+        return AdapterFactory.create_retriever_adapter(
+            adapter_type="ensemble",
+            vector_store=vector_store,
+            embedding_model=embedding_model,
+            config=config
         )
     else:
         raise ValueError(f"지원하지 않는 리트리버 타입: {adapter_type}")
