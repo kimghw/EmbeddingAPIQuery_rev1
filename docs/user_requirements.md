@@ -28,37 +28,37 @@
 ### 4.1 Atomic 유스케이스
 1. **문서 로더(Loader) 모듈**
    - [x] 사용: PyPDF, PyMuPDF, JSONLoader
-   - [ ] 추가 고려: UnstructuredPDFLoader, TextLoader, WebBaseLoader
-   - [ ] 요구사항: 문서 로더를 여러 개 사용할 예정이기에 필요시 인터페이스, DI, 어댑터 적용
+   - [x] 추가 구현: UnstructuredPDFLoader, WebScraperLoader
+   - [x] 요구사항: 문서 로더를 여러 개 사용할 예정이기에 필요시 인터페이스, DI, 어댑터 적용
 
 2. **텍스트 청킹 전략**
    - [x] 사용: SemanticChunker
-   - [ ] 추가 고려: RecursiveCharacterTextSplitter, MarkdownTextSplitter
-   - [ ] 요구사항: 문서 ID, 메타데이터
+   - [x] 추가 구현: RecursiveCharacterTextSplitter
+   - [x] 요구사항: 문서 ID, 메타데이터
 
 3. **임베딩 모델**
    - [x] 사용: OpenAIEmbeddings (text-embedding-3-small)
    - [ ] 추가 고려: HuggingFaceBgeEmbeddings (BAAI/bge-small-en-v1.5)
-   - [ ] 요구사항: 문서 ID, 메타데이터
+   - [x] 요구사항: 문서 ID, 메타데이터
 
 4. **벡터 저장 및 인덱스**
    - [x] 사용: Qdrant
-   - [ ] 추가 고려: FAISS, ChromaDB
-   - [ ] 요구사항: 문서 ID, 메타데이터
+   - [x] 추가 구현: FAISS, MockVectorStore
+   - [x] 요구사항: 문서 ID, 메타데이터
 
 5. **리트리버**
-   - [x] 사용: MultiVectorRetriever
-   - [ ] 추가 고려: MultiQueryRetriever, ParentDocumentRetriever, MMR 등
-   - [ ] 요구사항: 문서 ID, 메타데이터
+   - [x] 사용: SimpleRetriever
+   - [x] 추가 구현: EnsembleRetriever (다중 융합 전략 지원)
+   - [x] 요구사항: 문서 ID, 메타데이터
 
 ### 4.2 Composite 유스케이스/서비스
 1. **벡터 DB 저장**
-   - [ ] 문서 업로드, 청킹, 임베딩, 벡터 DB 저장
-   - [ ] 각 모듈 다른 모듈로 변경 가능
+   - [x] 문서 업로드, 청킹, 임베딩, 벡터 DB 저장
+   - [x] 각 모듈 다른 모듈로 변경 가능
 
 2. **질의**
-   - [ ] 질의, 임베딩, 유사도 검색, 관련 청크들 반환
-   - [ ] 각 모듈 다른 모듈로 변경 가능
+   - [x] 질의, 임베딩, 유사도 검색, 관련 청크들 반환
+   - [x] 각 모듈 다른 모듈로 변경 가능
 
 3. **질의 + 답변생성**
    - [ ] 청크 + 질의, LLM 답변 생성
@@ -71,8 +71,31 @@
 - 비동기 처리 지원
 - 멀티 인터페이스 (API, CLI)
 
-## 6. 상태
-- **현재 단계**: 프로젝트 기본 구조 완료
+## 6. 최신 추가 기능 (2024-05-24)
+
+### 6.1 EnsembleRetriever 구현 완료
+- **다중 융합 전략 지원**:
+  - Rank Fusion (RRF): 순위 기반 융합
+  - Score Fusion: 점수 기반 융합  
+  - Weighted Score: 가중치 적용 점수 융합
+  - Voting: 투표 기반 융합
+- **동적 리트리버 관리**: 런타임에 리트리버 추가/제거 가능
+- **가중치 조정**: 각 리트리버별 가중치 설정 가능
+- **헬스 체크**: 앙상블 내 모든 리트리버 상태 확인
+
+### 6.2 JSON 로더 구현 완료
+- **JSON/JSONL 파일 지원**: 구조화된 데이터 로드
+- **메타데이터 자동 추출**: 파일 정보 및 구조 분석
+- **다중 파일 처리**: 배치 로드 기능
+- **바이트 스트림 지원**: 메모리 기반 처리
+
+### 6.3 AdapterFactory 확장
+- **리트리버 생성 메서드 추가**: create_retriever_adapter, create_ensemble_retriever
+- **통합 팩토리 패턴**: 모든 어댑터 타입을 단일 팩토리에서 관리
+- **설정 기반 생성**: 환경 설정에 따른 자동 어댑터 선택
+
+## 7. 상태
+- **현재 단계**: 고급 검색 기능 구현 완료
 - **완료된 작업**:
   - [x] 프로젝트 디렉토리 구조 생성
   - [x] Git 초기화 및 가상환경 설정
@@ -81,4 +104,10 @@
   - [x] 포트 인터페이스 정의 (DocumentLoader, TextChunker, EmbeddingModel, VectorStore, Retriever)
   - [x] 유스케이스 정의 (DocumentProcessing, DocumentRetrieval)
   - [x] 프로젝트 문서화 (README.md)
-- **다음 단계**: 어댑터 구현 및 인터페이스 개발
+  - [x] 다양한 어댑터 구현 (PDF, JSON, Web Scraper, Unstructured)
+  - [x] 벡터 저장소 어댑터 (Qdrant, FAISS, Mock)
+  - [x] 텍스트 청킹 어댑터 (Recursive, Semantic)
+  - [x] 고급 리트리버 (Simple, Ensemble)
+  - [x] AdapterFactory 패턴 구현
+  - [x] 통합 테스트 및 검증
+- **다음 단계**: LLM 답변 생성 기능 및 API/CLI 인터페이스 완성

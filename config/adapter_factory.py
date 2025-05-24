@@ -8,6 +8,7 @@ from core.ports.vector_store import VectorStorePort
 from core.ports.embedding_model import EmbeddingModelPort
 from core.ports.document_loader import DocumentLoaderPort
 from core.ports.text_chunker import TextChunkerPort
+from core.ports.retriever import RetrieverPort
 
 # Vector Store Adapters
 from adapters.vector_store.qdrant_vector_store import QdrantVectorStoreAdapter
@@ -26,6 +27,10 @@ from adapters.pdf.unstructured_loader import UnstructuredLoaderAdapter
 # Text Chunker Adapters
 from adapters.embedding.text_chunker import RecursiveTextChunkerAdapter
 from adapters.embedding.semantic_text_chunker import SemanticTextChunkerAdapter
+
+# Retriever Adapters
+from adapters.vector_store.simple_retriever import SimpleRetrieverAdapter
+from adapters.vector_store.ensemble_retriever import EnsembleRetrieverAdapter, FusionStrategy
 
 
 class AdapterFactory:
@@ -97,6 +102,61 @@ class AdapterFactory:
         #     )
         else:
             raise ValueError(f"지원하지 않는 텍스트 청킹 타입: {adapter_type}")
+    
+    @staticmethod
+    def create_retriever_adapter(
+        adapter_type: str = "simple",
+        vector_store: VectorStorePort = None,
+        embedding_model: EmbeddingModelPort = None,
+        **kwargs
+    ) -> RetrieverPort:
+        """리트리버 어댑터 생성"""
+        if adapter_type.lower() == "simple":
+            if not vector_store or not embedding_model:
+                raise ValueError("Simple retriever requires vector_store and embedding_model")
+            return SimpleRetrieverAdapter(vector_store, embedding_model)
+        elif adapter_type.lower() == "ensemble":
+            retrievers = kwargs.get('retrievers', [])
+            if not retrievers:
+                raise ValueError("Ensemble retriever requires a list of retrievers")
+            
+            fusion_strategy = kwargs.get('fusion_strategy', FusionStrategy.RANK_FUSION)
+            weights = kwargs.get('weights', None)
+            rrf_k = kwargs.get('rrf_k', 60)
+            
+            return EnsembleRetrieverAdapter(
+                retrievers=retrievers,
+                fusion_strategy=fusion_strategy,
+                weights=weights,
+                rrf_k=rrf_k
+            )
+        else:
+            raise ValueError(f"지원하지 않는 리트리버 타입: {adapter_type}")
+    
+    @staticmethod
+    def create_ensemble_retriever(
+        retrievers: list[RetrieverPort],
+        fusion_strategy: str = "rank_fusion",
+        weights: list[float] = None,
+        rrf_k: int = 60
+    ) -> EnsembleRetrieverAdapter:
+        """앙상블 리트리버 생성 (편의 메서드)"""
+        # 문자열을 FusionStrategy enum으로 변환
+        strategy_map = {
+            "score_fusion": FusionStrategy.SCORE_FUSION,
+            "rank_fusion": FusionStrategy.RANK_FUSION,
+            "weighted_score": FusionStrategy.WEIGHTED_SCORE,
+            "voting": FusionStrategy.VOTING
+        }
+        
+        strategy = strategy_map.get(fusion_strategy.lower(), FusionStrategy.RANK_FUSION)
+        
+        return EnsembleRetrieverAdapter(
+            retrievers=retrievers,
+            fusion_strategy=strategy,
+            weights=weights,
+            rrf_k=rrf_k
+        )
 
 
 # 편의 함수들
