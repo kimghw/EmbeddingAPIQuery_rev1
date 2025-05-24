@@ -21,12 +21,12 @@ async def query_operating_temperature():
     try:
         # 어댑터 초기화
         print("🔧 어댑터 초기화 중...")
-        vector_store = AdapterFactory.create_vector_store("qdrant", config)
-        embedding_model = AdapterFactory.create_embedding_model("openai", config)
-        retriever = AdapterFactory.create_retriever("simple", config, vector_store, embedding_model)
+        vector_store = AdapterFactory.create_vector_store_adapter("qdrant")
+        embedding_model = AdapterFactory.create_embedding_adapter("openai", config)
+        retriever = AdapterFactory.create_retriever_adapter("simple", vector_store=vector_store, embedding_model=embedding_model, config=config)
         
         # 유스케이스 생성
-        retrieval_usecase = DocumentRetrievalUseCase(retriever)
+        retrieval_usecase = DocumentRetrievalUseCase(retriever, embedding_model, vector_store, config)
         
         # 온도 관련 질의들
         temperature_queries = [
@@ -50,15 +50,15 @@ async def query_operating_temperature():
             
             try:
                 results = await retrieval_usecase.search_documents(
-                    query=query,
-                    limit=5,
+                    query_text=query,
+                    top_k=5,
                     score_threshold=0.1
                 )
                 
-                if results:
-                    print(f"✅ {len(results)} 개의 관련 결과 발견")
+                if results.success and results.results:
+                    print(f"✅ {len(results.results)} 개의 관련 결과 발견")
                     
-                    for j, result in enumerate(results, 1):
+                    for j, result in enumerate(results.results, 1):
                         print(f"\n   결과 {j}:")
                         print(f"     점수: {result.score:.4f}")
                         print(f"     내용 미리보기: {result.content[:150]}...")
