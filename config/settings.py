@@ -69,6 +69,43 @@ class ConfigPort(ABC):
     @abstractmethod
     def get_chunk_overlap(self) -> int:
         pass
+    
+    # Dependency Injection Configuration
+    @abstractmethod
+    def get_vector_store_type(self) -> str:
+        pass
+    
+    @abstractmethod
+    def get_embedding_type(self) -> str:
+        pass
+    
+    @abstractmethod
+    def get_document_loader_type(self) -> str:
+        pass
+    
+    @abstractmethod
+    def get_text_chunker_type(self) -> str:
+        pass
+    
+    @abstractmethod
+    def get_retriever_type(self) -> str:
+        pass
+    
+    @abstractmethod
+    def get_llm_model_type(self) -> str:
+        pass
+    
+    @abstractmethod
+    def get_llm_model_name(self) -> str:
+        pass
+    
+    @abstractmethod
+    def get_llm_temperature(self) -> float:
+        pass
+    
+    @abstractmethod
+    def get_llm_max_tokens(self) -> int:
+        pass
 
 
 class BaseConfig(PydanticBaseSettings):
@@ -105,6 +142,19 @@ class BaseConfig(PydanticBaseSettings):
     embedding_model: str = Field(default="text-embedding-3-small", env="EMBEDDING_MODEL")
     chunk_size: int = Field(default=1000, env="CHUNK_SIZE")
     chunk_overlap: int = Field(default=200, env="CHUNK_OVERLAP")
+    
+    # Dependency Injection Configuration
+    vector_store_type: str = Field(default="qdrant", env="VECTOR_STORE_TYPE")
+    embedding_type: str = Field(default="openai", env="EMBEDDING_TYPE")
+    document_loader_type: str = Field(default="pdf", env="DOCUMENT_LOADER_TYPE")
+    text_chunker_type: str = Field(default="recursive", env="TEXT_CHUNKER_TYPE")
+    retriever_type: str = Field(default="simple", env="RETRIEVER_TYPE")
+    
+    # LLM Configuration
+    llm_model_type: str = Field(default="openai", env="LLM_MODEL_TYPE")
+    llm_model_name: str = Field(default="gpt-3.5-turbo", env="LLM_MODEL_NAME")
+    llm_temperature: float = Field(default=0.7, env="LLM_TEMPERATURE")
+    llm_max_tokens: int = Field(default=1000, env="LLM_MAX_TOKENS")
     
     class Config:
         env_file = ".env"
@@ -191,6 +241,34 @@ class ConfigAdapter(ConfigPort):
     
     def get_chunk_overlap(self) -> int:
         return self._config.chunk_overlap
+    
+    # Dependency Injection Configuration
+    def get_vector_store_type(self) -> str:
+        return self._config.vector_store_type
+    
+    def get_embedding_type(self) -> str:
+        return self._config.embedding_type
+    
+    def get_document_loader_type(self) -> str:
+        return self._config.document_loader_type
+    
+    def get_text_chunker_type(self) -> str:
+        return self._config.text_chunker_type
+    
+    def get_retriever_type(self) -> str:
+        return self._config.retriever_type
+    
+    def get_llm_model_type(self) -> str:
+        return self._config.llm_model_type
+    
+    def get_llm_model_name(self) -> str:
+        return self._config.llm_model_name
+    
+    def get_llm_temperature(self) -> float:
+        return self._config.llm_temperature
+    
+    def get_llm_max_tokens(self) -> int:
+        return self._config.llm_max_tokens
 
 
 def create_config() -> ConfigPort:

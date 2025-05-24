@@ -162,27 +162,120 @@ class AdapterFactory:
 # 편의 함수들
 def get_vector_store_adapter(config: ConfigPort) -> VectorStorePort:
     """설정에서 벡터 저장소 어댑터 타입을 읽어서 생성"""
-    adapter_type = getattr(config, 'get_vector_store_type', lambda: "qdrant")()
+    adapter_type = config.get_vector_store_type()
     return AdapterFactory.create_vector_store_adapter(adapter_type)
 
 
 def get_embedding_adapter(config: ConfigPort) -> EmbeddingModelPort:
     """설정에서 임베딩 어댑터 타입을 읽어서 생성"""
-    adapter_type = getattr(config, 'get_embedding_type', lambda: "openai")()
+    adapter_type = config.get_embedding_type()
     return AdapterFactory.create_embedding_adapter(adapter_type, config)
 
 
 def get_document_loader_adapter(config: ConfigPort) -> DocumentLoaderPort:
     """설정에서 문서 로더 어댑터 타입을 읽어서 생성"""
-    adapter_type = getattr(config, 'get_document_loader_type', lambda: "pdf")()
+    adapter_type = config.get_document_loader_type()
     return AdapterFactory.create_document_loader_adapter(adapter_type)
 
 
 def get_text_chunker_adapter(config: ConfigPort) -> TextChunkerPort:
     """설정에서 텍스트 청킹 어댑터 타입을 읽어서 생성"""
-    adapter_type = getattr(config, 'get_text_chunker_type', lambda: "recursive")()
+    adapter_type = config.get_text_chunker_type()
     return AdapterFactory.create_text_chunker_adapter(
         adapter_type=adapter_type,
         chunk_size=config.get_chunk_size(),
         chunk_overlap=config.get_chunk_overlap()
     )
+
+
+def get_retriever_adapter(config: ConfigPort) -> RetrieverPort:
+    """설정에서 리트리버 어댑터 타입을 읽어서 생성"""
+    adapter_type = config.get_retriever_type()
+    
+    if adapter_type.lower() == "simple":
+        vector_store = get_vector_store_adapter(config)
+        embedding_model = get_embedding_adapter(config)
+        return AdapterFactory.create_retriever_adapter(
+            adapter_type="simple",
+            vector_store=vector_store,
+            embedding_model=embedding_model
+        )
+    elif adapter_type.lower() == "ensemble":
+        # 기본적으로 3개의 simple retriever로 앙상블 구성
+        vector_store = get_vector_store_adapter(config)
+        embedding_model = get_embedding_adapter(config)
+        
+        retrievers = [
+            AdapterFactory.create_retriever_adapter(
+                adapter_type="simple",
+                vector_store=vector_store,
+                embedding_model=embedding_model
+            ) for _ in range(3)
+        ]
+        
+        return AdapterFactory.create_ensemble_retriever(
+            retrievers=retrievers,
+            fusion_strategy="rank_fusion"
+        )
+    else:
+        raise ValueError(f"지원하지 않는 리트리버 타입: {adapter_type}")
+
+
+class DependencyContainer:
+    """의존성 주입 컨테이너"""
+    
+    def __init__(self, config: ConfigPort):
+        self.config = config
+        self._vector_store = None
+        self._embedding_model = None
+        self._document_loader = None
+        self._text_chunker = None
+        self._retriever = None
+    
+    @property
+    def vector_store(self) -> VectorStorePort:
+        """벡터 저장소 싱글톤 인스턴스"""
+        if self._vector_store is None:
+            self._vector_store = get_vector_store_adapter(self.config)
+        return self._vector_store
+    
+    @property
+    def embedding_model(self) -> EmbeddingModelPort:
+        """임베딩 모델 싱글톤 인스턴스"""
+        if self._embedding_model is None:
+            self._embedding_model = get_embedding_adapter(self.config)
+        return self._embedding_model
+    
+    @property
+    def document_loader(self) -> DocumentLoaderPort:
+        """문서 로더 싱글톤 인스턴스"""
+        if self._document_loader is None:
+            self._document_loader = get_document_loader_adapter(self.config)
+        return self._document_loader
+    
+    @property
+    def text_chunker(self) -> TextChunkerPort:
+        """텍스트 청킹 싱글톤 인스턴스"""
+        if self._text_chunker is None:
+            self._text_chunker = get_text_chunker_adapter(self.config)
+        return self._text_chunker
+    
+    @property
+    def retriever(self) -> RetrieverPort:
+        """리트리버 싱글톤 인스턴스"""
+        if self._retriever is None:
+            self._retriever = get_retriever_adapter(self.config)
+        return self._retriever
+    
+    def reset(self):
+        """모든 인스턴스 초기화 (테스트용)"""
+        self._vector_store = None
+        self._embedding_model = None
+        self._document_loader = None
+        self._text_chunker = None
+        self._retriever = None
+
+
+# 전역 의존성 컨테이너 (설정 기반 자동 초기화)
+from config.settings import config as global_config
+container = DependencyContainer(global_config)

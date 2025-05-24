@@ -12,16 +12,56 @@
 - **INTERFACES**: FastAPI 라우터, CLI 명령어 (얇은 어댑터)
 
 ## 3. 언어 및 라이브러리
+
+### 3.1 핵심 기술 스택
 - **언어**: Python 3.12+
-- **웹 프레임워크**: FastAPI
-- **CLI**: Click
+- **웹 프레임워크**: FastAPI 0.104.1
+- **CLI**: Click 8.1.7
 - **비동기**: asyncio/await 기반
-- **데이터 모델**: Pydantic
-- **문서 로드 처리**: PyPDF 또는 유사 라이브러리
-- **청킹**: SemanticChunker
-- **임베딩**: OpenAI API
-- **벡터 저장소**: Qdrant(HNSW), FAISS, Chroma
-- **질의 답변**: OpenAI API
+- **데이터 모델**: Pydantic 2.5.0, Pydantic-Settings 2.1.0
+
+### 3.2 문서 처리 라이브러리
+- **PDF 처리**: 
+  - PyPDF 3.17.1 (기본 PDF 파싱)
+  - PyMuPDF 1.23.8 (고급 PDF 처리)
+- **웹 스크래핑**: 
+  - aiohttp 3.9.1 (비동기 HTTP 클라이언트)
+  - BeautifulSoup4 4.12.2 (HTML 파싱)
+  - lxml 4.9.3 (XML/HTML 파서)
+- **구조화되지 않은 문서**: 
+  - unstructured[all-docs] 0.11.2 (선택적, 다양한 문서 형식 지원)
+
+### 3.3 AI/ML 및 임베딩 라이브러리
+- **LLM 및 임베딩**: 
+  - OpenAI >=1.6.1 (GPT 모델 및 text-embedding-3-small)
+  - LangChain 0.0.350 (LLM 체인 및 프롬프트 관리)
+  - LangChain-OpenAI 0.0.2 (OpenAI 통합)
+  - LangChain-Community 0.0.10 (커뮤니티 통합)
+
+### 3.4 벡터 저장소 및 검색
+- **벡터 데이터베이스**:
+  - Qdrant-client 1.7.0 (클라우드 네이티브 벡터 DB, HNSW 알고리즘)
+  - FAISS-cpu 1.7.4 (Facebook AI 유사도 검색, 로컬 벡터 인덱스)
+- **텍스트 청킹**: 
+  - LangChain SemanticChunker (의미 기반 청킹)
+  - RecursiveCharacterTextSplitter (재귀적 문자 분할)
+
+### 3.5 질의 답변 시스템
+- **LLM 모델**: 
+  - OpenAI GPT-4 / GPT-3.5-turbo (질의 응답 생성)
+  - LangChain ChatOpenAI (채팅 기반 LLM 인터페이스)
+- **프롬프트 엔지니어링**:
+  - LangChain PromptTemplate (프롬프트 템플릿 관리)
+  - LangChain ChatPromptTemplate (채팅 프롬프트)
+- **체인 구성**:
+  - LangChain RetrievalQA (검색 기반 질의응답)
+  - LangChain ConversationalRetrievalChain (대화형 검색)
+  - LangChain LCEL (LangChain Expression Language)
+
+### 3.6 개발 및 테스트 도구
+- **테스트**: pytest 7.4.3, pytest-asyncio 0.21.1
+- **코드 품질**: black 23.11.0, isort 5.12.0, flake8 6.1.0, mypy 1.7.1
+- **유틸리티**: python-multipart 0.0.6, python-dotenv 1.0.0
 
 ## 4. 핵심 기능 요구사항
 
@@ -51,6 +91,12 @@
    - [x] 추가 구현: EnsembleRetriever (다중 융합 전략 지원)
    - [x] 요구사항: 문서 ID, 메타데이터
 
+6. **질의 답변 생성**
+   - [ ] LLM 모델: OpenAI GPT-4/GPT-3.5-turbo
+   - [ ] 체인 구성: LangChain RetrievalQA, ConversationalRetrievalChain
+   - [ ] 프롬프트 관리: LangChain PromptTemplate, ChatPromptTemplate
+   - [ ] 요구사항: 검색된 청크 + 사용자 질의 → 자연어 답변 생성
+
 ### 4.2 Composite 유스케이스/서비스
 1. **벡터 DB 저장**
    - [x] 문서 업로드, 청킹, 임베딩, 벡터 DB 저장
@@ -61,8 +107,9 @@
    - [x] 각 모듈 다른 모듈로 변경 가능
 
 3. **질의 + 답변생성**
-   - [ ] 청크 + 질의, LLM 답변 생성
+   - [ ] 청크 + 질의, LLM 답변 생성 (LangChain 기반)
    - [ ] 각 모듈 다른 모듈로 변경 가능
+   - [ ] 대화 히스토리 관리 및 컨텍스트 유지
 
 ## 5. 아키텍처 요구사항
 - 클린 아키텍처 적용
