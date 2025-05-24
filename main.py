@@ -4,7 +4,7 @@ Main entry point for Document Embedding & Retrieval System.
 
 import asyncio
 from fastapi import FastAPI
-from interfaces.api.main import create_app
+from interfaces.api.main import app
 from interfaces.cli.main import cli
 import sys
 
@@ -19,8 +19,7 @@ def main():
     else:
         # API mode (default)
         import uvicorn
-        app = create_app()
-        uvicorn.run(app, host="0.0.0.0", port=8000)
+        uvicorn.run(app, host="0.0.0.0", port=8001)
 
 
 if __name__ == "__main__":

@@ -151,3 +151,4 @@ qdrant_storage/
 # Test files
 test_documents/
 temp/
+testdata/

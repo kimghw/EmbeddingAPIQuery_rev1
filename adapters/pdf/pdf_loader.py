@@ -218,6 +218,49 @@ class PdfLoaderAdapter(DocumentLoaderPort):
         doc.close()
         return "\n\n".join(text_content)
     
+    # 기존 메서드들과의 호환성을 위한 별칭
+    async def load_document(self, file_path: str) -> Document:
+        """단일 문서 로드 (호환성)"""
+        return await self.load_from_file(file_path)
+    
+    async def load_multiple_documents(self, file_paths: List[str]) -> List[Document]:
+        """여러 문서 로드 (호환성)"""
+        return await self.load_multiple_files(file_paths)
+    
+    def get_supported_extensions(self) -> List[str]:
+        """지원하는 파일 확장자 반환 (호환성)"""
+        return self.get_supported_formats()
+    
+    def get_loader_type(self) -> str:
+        """로더 타입 반환 (호환성)"""
+        return "pdf"
+    
+    async def validate_file(self, file_path: str) -> bool:
+        """파일 유효성 검사 (호환성)"""
+        try:
+            path = Path(file_path)
+            
+            # 파일 존재 확인
+            if not path.exists():
+                return False
+            
+            # 확장자 확인
+            if not self.is_format_supported(path.suffix):
+                return False
+            
+            # PDF 파일 유효성 검사
+            if self.preferred_library == "pypdf":
+                with open(path, 'rb') as file:
+                    pypdf.PdfReader(file)
+            else:
+                doc = fitz.open(str(path))
+                doc.close()
+            
+            return True
+            
+        except Exception:
+            return False
+    
     def _extract_with_pymupdf_bytes(self, content: bytes) -> str:
         """Extract text using PyMuPDF from bytes."""
         text_content = []

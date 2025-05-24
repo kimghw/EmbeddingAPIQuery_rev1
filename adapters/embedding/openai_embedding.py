@@ -98,6 +98,7 @@ class OpenAIEmbeddingAdapter(EmbeddingModelPort):
             chunk_id=chunk.id,
             metadata={
                 **chunk.metadata,
+                "content": chunk.content,  # Store chunk content
                 "chunk_index": chunk.chunk_index,
                 "chunk_length": len(chunk.content),
                 "embedding_model": self.model_name
@@ -125,6 +126,7 @@ class OpenAIEmbeddingAdapter(EmbeddingModelPort):
                 chunk_id=chunk.id,
                 metadata={
                     **chunk.metadata,
+                    "content": chunk.content,  # Store chunk content
                     "chunk_index": chunk.chunk_index,
                     "chunk_length": len(chunk.content),
                     "embedding_model": self.model_name

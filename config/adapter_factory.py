@@ -1,0 +1,128 @@
+"""
+어댑터 팩토리 - 설정에 따라 적절한 어댑터를 생성
+"""
+
+from typing import Protocol
+from config.settings import ConfigPort
+from core.ports.vector_store import VectorStorePort
+from core.ports.embedding_model import EmbeddingModelPort
+from core.ports.document_loader import DocumentLoaderPort
+from core.ports.text_chunker import TextChunkerPort
+
+# Vector Store Adapters
+from adapters.vector_store.qdrant_vector_store import QdrantVectorStoreAdapter
+from adapters.vector_store.mock_vector_store import MockVectorStoreAdapter
+from adapters.vector_store.faiss_vector_store import FaissVectorStoreAdapter
+
+# Embedding Adapters  
+from adapters.embedding.openai_embedding import OpenAIEmbeddingAdapter
+
+# Document Loader Adapters
+from adapters.pdf.pdf_loader import PdfLoaderAdapter
+from adapters.pdf.json_loader import JsonLoaderAdapter
+from adapters.pdf.web_scraper_loader import WebScraperLoaderAdapter
+from adapters.pdf.unstructured_loader import UnstructuredLoaderAdapter
+
+# Text Chunker Adapters
+from adapters.embedding.text_chunker import RecursiveTextChunkerAdapter
+from adapters.embedding.semantic_text_chunker import SemanticTextChunkerAdapter
+
+
+class AdapterFactory:
+    """어댑터 팩토리 클래스"""
+    
+    @staticmethod
+    def create_vector_store_adapter(adapter_type: str = "qdrant") -> VectorStorePort:
+        """벡터 저장소 어댑터 생성"""
+        if adapter_type.lower() == "qdrant":
+            return QdrantVectorStoreAdapter()
+        elif adapter_type.lower() == "mock":
+            return MockVectorStoreAdapter()
+        elif adapter_type.lower() == "faiss":
+            return FaissVectorStoreAdapter()
+        # elif adapter_type.lower() == "chroma":
+        #     return ChromaVectorStoreAdapter()
+        else:
+            raise ValueError(f"지원하지 않는 벡터 저장소 타입: {adapter_type}")
+    
+    @staticmethod
+    def create_embedding_adapter(adapter_type: str = "openai", config: ConfigPort = None) -> EmbeddingModelPort:
+        """임베딩 모델 어댑터 생성"""
+        if adapter_type.lower() == "openai":
+            return OpenAIEmbeddingAdapter(config)
+        # elif adapter_type.lower() == "huggingface":
+        #     return HuggingFaceEmbeddingAdapter(config)
+        # elif adapter_type.lower() == "cohere":
+        #     return CohereEmbeddingAdapter(config)
+        else:
+            raise ValueError(f"지원하지 않는 임베딩 모델 타입: {adapter_type}")
+    
+    @staticmethod
+    def create_document_loader_adapter(adapter_type: str = "pdf", **kwargs) -> DocumentLoaderPort:
+        """문서 로더 어댑터 생성"""
+        if adapter_type.lower() == "pdf":
+            return PdfLoaderAdapter()
+        elif adapter_type.lower() == "json":
+            return JsonLoaderAdapter()
+        elif adapter_type.lower() == "web_scraper" or adapter_type.lower() == "web":
+            return WebScraperLoaderAdapter(**kwargs)
+        elif adapter_type.lower() == "unstructured":
+            return UnstructuredLoaderAdapter()
+        # elif adapter_type.lower() == "pymupdf":
+        #     return PyMuPDFLoaderAdapter()
+        else:
+            raise ValueError(f"지원하지 않는 문서 로더 타입: {adapter_type}")
+    
+    @staticmethod
+    def create_text_chunker_adapter(
+        adapter_type: str = "recursive", 
+        chunk_size: int = 1000, 
+        chunk_overlap: int = 200
+    ) -> TextChunkerPort:
+        """텍스트 청킹 어댑터 생성"""
+        if adapter_type.lower() == "recursive":
+            return RecursiveTextChunkerAdapter(
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap
+            )
+        elif adapter_type.lower() == "semantic":
+            return SemanticTextChunkerAdapter(
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap
+            )
+        # elif adapter_type.lower() == "token":
+        #     return TokenTextChunkerAdapter(
+        #         chunk_size=chunk_size,
+        #         chunk_overlap=chunk_overlap
+        #     )
+        else:
+            raise ValueError(f"지원하지 않는 텍스트 청킹 타입: {adapter_type}")
+
+
+# 편의 함수들
+def get_vector_store_adapter(config: ConfigPort) -> VectorStorePort:
+    """설정에서 벡터 저장소 어댑터 타입을 읽어서 생성"""
+    adapter_type = getattr(config, 'get_vector_store_type', lambda: "qdrant")()
+    return AdapterFactory.create_vector_store_adapter(adapter_type)
+
+
+def get_embedding_adapter(config: ConfigPort) -> EmbeddingModelPort:
+    """설정에서 임베딩 어댑터 타입을 읽어서 생성"""
+    adapter_type = getattr(config, 'get_embedding_type', lambda: "openai")()
+    return AdapterFactory.create_embedding_adapter(adapter_type, config)
+
+
+def get_document_loader_adapter(config: ConfigPort) -> DocumentLoaderPort:
+    """설정에서 문서 로더 어댑터 타입을 읽어서 생성"""
+    adapter_type = getattr(config, 'get_document_loader_type', lambda: "pdf")()
+    return AdapterFactory.create_document_loader_adapter(adapter_type)
+
+
+def get_text_chunker_adapter(config: ConfigPort) -> TextChunkerPort:
+    """설정에서 텍스트 청킹 어댑터 타입을 읽어서 생성"""
+    adapter_type = getattr(config, 'get_text_chunker_type', lambda: "recursive")()
+    return AdapterFactory.create_text_chunker_adapter(
+        adapter_type=adapter_type,
+        chunk_size=config.get_chunk_size(),
+        chunk_overlap=config.get_chunk_overlap()
+    )
