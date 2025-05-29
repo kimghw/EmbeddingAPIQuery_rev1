@@ -19,7 +19,11 @@ def main():
     else:
         # API mode (default)
         import uvicorn
-        uvicorn.run(app, host="0.0.0.0", port=8001)
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--port', type=int, default=8001, help='Port to run the server on')
+        args, unknown = parser.parse_known_args()
+        uvicorn.run(app, host="0.0.0.0", port=args.port)
 
 
 if __name__ == "__main__":

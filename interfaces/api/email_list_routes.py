@@ -50,7 +50,7 @@ async def get_email_list(
                 
                 email_info = {
                     "id": email_id,
-                    "subject": metadata.get('content', 'No Subject'),
+                    "subject": metadata.get('subject', metadata.get('content', 'No Subject')),
                     "sender_name": metadata.get('sender_name', 'Unknown'),
                     "sender_address": metadata.get('sender_address', ''),
                     "receiver_names": metadata.get('receiver_names', []),

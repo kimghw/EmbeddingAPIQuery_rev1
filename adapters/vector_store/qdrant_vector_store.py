@@ -119,7 +119,7 @@ class QdrantVectorStoreAdapter(VectorStorePort):
             if not await self.collection_exists(collection_name):
                 await self.create_collection(collection_name, len(embedding.vector))
             
-            # Prepare metadata payload
+            # Prepare metadata payload - flatten all metadata to top level for easy searching
             payload = {
                 "document_id": embedding.document_id,
                 "chunk_id": embedding.chunk_id,
@@ -128,8 +128,14 @@ class QdrantVectorStoreAdapter(VectorStorePort):
                 "dimension": embedding.dimension,  # Store dimension
                 "created_at": embedding.created_at.isoformat(),  # Store creation time
                 "content": embedding.metadata.get("content", ""),  # Store chunk content
-                "metadata": embedding.metadata or {}
             }
+            
+            # Flatten all metadata fields to top level for easy filtering
+            if embedding.metadata:
+                payload.update(embedding.metadata)
+            
+            # Remove None values to keep payload clean
+            payload = {k: v for k, v in payload.items() if v is not None}
             
             # Ensure valid point ID for Qdrant
             valid_point_id = self._ensure_valid_point_id(embedding.id)
@@ -167,7 +173,7 @@ class QdrantVectorStoreAdapter(VectorStorePort):
             
             points = []
             for embedding in embeddings:
-                # Prepare metadata payload
+                # Prepare metadata payload - flatten all metadata to top level for easy searching
                 payload = {
                     "document_id": embedding.document_id,
                     "chunk_id": embedding.chunk_id,
@@ -176,8 +182,14 @@ class QdrantVectorStoreAdapter(VectorStorePort):
                     "dimension": embedding.dimension,  # Store dimension
                     "created_at": embedding.created_at.isoformat(),  # Store creation time
                     "content": embedding.metadata.get("content", ""),  # Store chunk content
-                    "metadata": embedding.metadata or {}
                 }
+                
+                # Flatten all metadata fields to top level for easy filtering
+                if embedding.metadata:
+                    payload.update(embedding.metadata)
+                
+                # Remove None values to keep payload clean
+                payload = {k: v for k, v in payload.items() if v is not None}
                 
                 # Ensure valid point ID for Qdrant
                 valid_point_id = self._ensure_valid_point_id(embedding.id)
@@ -440,21 +452,18 @@ class QdrantVectorStoreAdapter(VectorStorePort):
                 created_at_str = payload.get("created_at")
                 created_at = datetime.fromisoformat(created_at_str) if created_at_str else datetime.utcnow()
                 
-                # Get metadata from payload
-                metadata = payload.get("metadata", {})
+                # Get metadata from payload - all fields are stored at top level
+                metadata = {}
                 
-                # For email data, ensure all fields are properly accessible
-                # The metadata already contains all the email fields
-                if "email_id" in metadata:
-                    # It's already in the right format
-                    pass
-                else:
-                    # Add document_id as email_id if not present
+                # Extract all metadata fields from payload (excluding system fields)
+                system_fields = {"document_id", "chunk_id", "original_embedding_id", "model", "dimension", "created_at"}
+                for key, value in payload.items():
+                    if key not in system_fields:
+                        metadata[key] = value
+                
+                # Ensure email_id is set
+                if "email_id" not in metadata:
                     metadata["email_id"] = payload.get("document_id")
-                
-                # Ensure content is available at top level
-                if "content" not in metadata and "content" in payload:
-                    metadata["content"] = payload.get("content", "")
                 
                 embedding = Embedding(
                     id=original_id,
