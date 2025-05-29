@@ -1,0 +1,165 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('test-user-id')/messages",
+  "value": [
+    {
+      "id": "AAMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OABGAAAAAAAiQ8W967B7TKBjgx9rVEURBwAiIsqMbYjsT5e-T7KzowPTAAAAAAEMAAAiIsqMbYjsT5e-T7KzowPTAAAYNKvwAAA=",
+      "createdDateTime": "2025-05-29T02:01:56Z",
+      "lastModifiedDateTime": "2025-05-29T02:01:56Z",
+      "changeKey": "CQAAABYAAAA=",
+      "categories": [],
+      "receivedDateTime": "2025-05-29T02:01:56Z",
+      "sentDateTime": "2025-05-29T02:01:56Z",
+      "hasAttachments": false,
+      "internetMessageId": "<PL25008aKRd-001@outlook.com>",
+      "subject": "PL25008aKRd - Initial Correspondence on Maritime Safety Regulations",
+      "bodyPreview": "Dear KR SDTP Team, We are writing to discuss the new maritime safety regulations that will be implemented...",
+      "importance": "normal",
+      "parentFolderId": "AQMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OAAuAAADIkPFveuwe0ygY4Mfa1RFEQEAIiLKjG2I7E-Xvk-ys6MD0wAAAAABDAAAAA==",
+      "conversationId": "AAQkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OAAQAOnUfbQv7EtIoNLvVkumUiA=",
+      "conversationIndex": "AQHbEdFg6dR9tC/sS0ig0u9WS6ZSIA==",
+      "isDeliveryReceiptRequested": false,
+      "isReadReceiptRequested": false,
+      "isRead": false,
+      "isDraft": false,
+      "webLink": "https://outlook.office365.com/owa/?ItemID=AAMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OABGAAAAAAAiQ8W967B7TKBjgx9rVEURBwAiIsqMbYjsT5e-T7KzowPTAAAAAAEMAAAiIsqMbYjsT5e-T7KzowPTAAAYNKvwAAA%3D&exvsurl=1&viewmodel=ReadMessageItem",
+      "sender": {
+        "emailAddress": {
+          "name": "Darko Dominovic",
+          "address": "Darko.Dominovic@crs.hr"
+        }
+      },
+      "from": {
+        "emailAddress": {
+          "name": "Darko Dominovic",
+          "address": "Darko.Dominovic@crs.hr"
+        }
+      },
+      "toRecipients": [
+        {
+          "emailAddress": {
+            "name": "KR SDTP",
+            "address": "krsdtp@krs.co.kr"
+          }
+        }
+      ],
+      "ccRecipients": [],
+      "bccRecipients": [],
+      "replyTo": [],
+      "body": {
+        "contentType": "html",
+        "content": "<html><head></head><body><p>Dear KR SDTP Team,</p><p>We are writing to discuss the new maritime safety regulations that will be implemented according to IMO MSC guidelines. The following points need to be addressed:</p><ul><li>Safety equipment certification requirements</li><li>Emergency response procedures</li><li>Training and competency standards</li><li>Documentation and record keeping</li></ul><p>Please review the attached documentation and provide your feedback by the end of this week.</p><p>Best regards,<br>Darko Dominovic<br>Croatian Register of Shipping</p></body></html>"
+      }
+    },
+    {
+      "id": "BBMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OABGAAAAAAAiQ8W967B7TKBjgx9rVEURBwAiIsqMbYjsT5e-T7KzowPTAAAAAAEMAAAiIsqMbYjsT5e-T7KzowPTAAAYNKvwBBB=",
+      "createdDateTime": "2025-05-29T08:15:30Z",
+      "lastModifiedDateTime": "2025-05-29T08:15:30Z",
+      "changeKey": "CQAAABYAAAB=",
+      "categories": [],
+      "receivedDateTime": "2025-05-29T08:15:30Z",
+      "sentDateTime": "2025-05-29T08:15:30Z",
+      "hasAttachments": true,
+      "internetMessageId": "<PL25008aKRd-002@krs.co.kr>",
+      "subject": "RE: PL25008aKRd - Initial Correspondence on Maritime Safety Regulations",
+      "bodyPreview": "Dear Mr. Dominovic, Thank you for your email regarding the maritime safety regulations. We have reviewed the documentation...",
+      "importance": "normal",
+      "parentFolderId": "AQMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OAAuAAADIkPFveuwe0ygY4Mfa1RFEQEAIiLKjG2I7E-Xvk-ys6MD0wAAAAABDAAAAA==",
+      "conversationId": "AAQkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OAAQAOnUfbQv7EtIoNLvVkumUiA=",
+      "conversationIndex": "AQHbEdFg6dR9tC/sS0ig0u9WS6ZSIA==",
+      "isDeliveryReceiptRequested": false,
+      "isReadReceiptRequested": false,
+      "isRead": true,
+      "isDraft": false,
+      "webLink": "https://outlook.office365.com/owa/?ItemID=BBMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OABGAAAAAAAiQ8W967B7TKBjgx9rVEURBwAiIsqMbYjsT5e-T7KzowPTAAAAAAEMAAAiIsqMbYjsT5e-T7KzowPTAAAYNKvwBBB%3D&exvsurl=1&viewmodel=ReadMessageItem",
+      "sender": {
+        "emailAddress": {
+          "name": "KR SDTP Team",
+          "address": "krsdtp@krs.co.kr"
+        }
+      },
+      "from": {
+        "emailAddress": {
+          "name": "KR SDTP Team",
+          "address": "krsdtp@krs.co.kr"
+        }
+      },
+      "toRecipients": [
+        {
+          "emailAddress": {
+            "name": "Darko Dominovic",
+            "address": "Darko.Dominovic@crs.hr"
+          }
+        }
+      ],
+      "ccRecipients": [
+        {
+          "emailAddress": {
+            "name": "Maritime Safety Department",
+            "address": "safety@krs.co.kr"
+          }
+        }
+      ],
+      "bccRecipients": [],
+      "replyTo": [],
+      "body": {
+        "contentType": "html",
+        "content": "<html><head></head><body><p>Dear Mr. Dominovic,</p><p>Thank you for your email regarding the maritime safety regulations. We have reviewed the documentation and would like to provide the following feedback:</p><ol><li><strong>Safety equipment certification requirements:</strong> We agree with the proposed standards and suggest implementing a phased approach over 12 months.</li><li><strong>Emergency response procedures:</strong> The procedures align with our current protocols. We recommend adding specific guidelines for offshore operations.</li><li><strong>Training and competency standards:</strong> We propose establishing a joint training program between our organizations.</li><li><strong>Documentation and record keeping:</strong> We suggest adopting digital documentation systems for better traceability.</li></ol><p>We have attached our detailed technical review and recommendations. Please let us know if you need any clarification.</p><p>Best regards,<br>KR SDTP Team<br>Korean Register of Shipping</p></body></html>"
+      }
+    },
+    {
+      "id": "CCMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OABGAAAAAAAiQ8W967B7TKBjgx9rVEURBwAiIsqMbYjsT5e-T7KzowPTAAAAAAEMAAAiIsqMbYjsT5e-T7KzowPTAAAYNKvwCCC=",
+      "createdDateTime": "2025-05-29T14:30:45Z",
+      "lastModifiedDateTime": "2025-05-29T14:30:45Z",
+      "changeKey": "CQAAABYAAAC=",
+      "categories": [],
+      "receivedDateTime": "2025-05-29T14:30:45Z",
+      "sentDateTime": "2025-05-29T14:30:45Z",
+      "hasAttachments": false,
+      "internetMessageId": "<MSC110-5-001@imo.org>",
+      "subject": "MSC 110/5 - Implementation Guidelines for SOLAS Chapter II-1",
+      "bodyPreview": "Dear Maritime Authorities, The International Maritime Organization is pleased to announce the publication of new implementation guidelines...",
+      "importance": "high",
+      "parentFolderId": "AQMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OAAuAAADIkPFveuwe0ygY4Mfa1RFEQEAIiLKjG2I7E-Xvk-ys6MD0wAAAAABDAAAAA==",
+      "conversationId": "BBQkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OAAQAOnUfbQv7EtIoNLvVkumUiB=",
+      "conversationIndex": "AQHbEdFg6dR9tC/sS0ig0u9WS6ZSIB==",
+      "isDeliveryReceiptRequested": false,
+      "isReadReceiptRequested": false,
+      "isRead": false,
+      "isDraft": false,
+      "webLink": "https://outlook.office365.com/owa/?ItemID=CCMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OABGAAAAAAAiQ8W967B7TKBjgx9rVEURBwAiIsqMbYjsT5e-T7KzowPTAAAAAAEMAAAiIsqMbYjsT5e-T7KzowPTAAAYNKvwCCC%3D&exvsurl=1&viewmodel=ReadMessageItem",
+      "sender": {
+        "emailAddress": {
+          "name": "IMO Secretariat",
+          "address": "secretariat@imo.org"
+        }
+      },
+      "from": {
+        "emailAddress": {
+          "name": "IMO Secretariat",
+          "address": "secretariat@imo.org"
+        }
+      },
+      "toRecipients": [
+        {
+          "emailAddress": {
+            "name": "KR SDTP",
+            "address": "krsdtp@krs.co.kr"
+          }
+        },
+        {
+          "emailAddress": {
+            "name": "Croatian Register of Shipping",
+            "address": "Darko.Dominovic@crs.hr"
+          }
+        }
+      ],
+      "ccRecipients": [],
+      "bccRecipients": [],
+      "replyTo": [],
+      "body": {
+        "contentType": "text",
+        "content": "Dear Maritime Authorities,\n\nThe International Maritime Organization is pleased to announce the publication of new implementation guidelines for SOLAS Chapter II-1 (Construction - Structure, subdivision and stability, machinery and electrical installations).\n\nKey updates include:\n\n1. Enhanced structural requirements for passenger ships\n2. Updated fire safety systems and equipment standards\n3. Improved emergency power supply requirements\n4. New guidelines for alternative design and arrangements\n5. Revised inspection and maintenance procedures\n\nThese guidelines will come into effect on January 1, 2026. All member states are requested to:\n\n- Review current national regulations for compliance\n- Update certification procedures accordingly\n- Ensure surveyor training programs include new requirements\n- Submit implementation reports by December 31, 2025\n\nFor technical questions, please contact the Maritime Safety Division at safety@imo.org.\n\nBest regards,\nIMO Secretariat\nInternational Maritime Organization"
+      }
+    }
+  ]
+}

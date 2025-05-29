@@ -101,3 +101,8 @@ class VectorStorePort(ABC):
     async def optimize_collection(self, collection_name: str) -> bool:
         """Optimize the collection for better performance."""
         pass
+    
+    @abstractmethod
+    async def get_all_embeddings(self, collection_name: str) -> List[Embedding]:
+        """Get all embeddings from a collection."""
+        pass

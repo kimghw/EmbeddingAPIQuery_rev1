@@ -1,0 +1,109 @@
+{
+  "json_data": {
+    "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('user-id')/messages",
+    "value": [
+      {
+        "id": "AAMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OABGAAAAAAAiQ8W967B7TKBjgx9rVEURBwAiIsqMbYjsT5e-T7KzowPTAAAAAAEMAAAiIsqMbYjsT5e-T7KzowPTAAAYEJk2AAA=",
+        "createdDateTime": "2025-05-29T02:01:56Z",
+        "lastModifiedDateTime": "2025-05-29T02:01:57Z",
+        "changeKey": "CQAAABYAAAAiIsqMbYjsT5e-T7KzowPTAAAYEJlC",
+        "categories": [],
+        "receivedDateTime": "2025-05-29T02:01:56Z",
+        "sentDateTime": "2025-05-29T02:01:55Z",
+        "hasAttachments": false,
+        "internetMessageId": "<PL25008aKRd@crs.hr>",
+        "subject": "PL25008aKRd - MSC 110/5 - Amendments to the International Code for the Construction and Equipment of Ships Carrying Dangerous Chemicals in Bulk (IBC Code)",
+        "bodyPreview": "Dear Colleagues, Please find attached the document MSC 110/5 - Amendments to the International Code for the Construction and Equipment of Ships Carrying Dangerous Chemicals in Bulk (IBC Code). Best regards, Darko Dominovic",
+        "importance": "normal",
+        "parentFolderId": "AQMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OAAuAAADIkPFveuwe0ygY4Mfa1RFEQEAIiLKjG2I7E-Xvk-ys6MD0wAAAQIBAAAA",
+        "conversationId": "AAQkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OAAQAOKjp_KhH0SLkrYO2XkOqpQ=",
+        "conversationIndex": "AQHbpWjC4qOn8qEfRIuStg7ZeQ6qlA==",
+        "isDeliveryReceiptRequested": false,
+        "isReadReceiptRequested": false,
+        "isRead": false,
+        "isDraft": false,
+        "webLink": "https://outlook.office365.com/owa/?ItemID=AAMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OABGAAAAAAAiQ8W967B7TKBjgx9rVEURBwAiIsqMbYjsT5e-T7KzowPTAAAAAAEMAAAiIsqMbYjsT5e-T7KzowPTAAAYEJk2AAA%3D&exvsurl=1&viewmodel=ReadMessageItem",
+        "sender": {
+          "emailAddress": {
+            "name": "Darko Dominovic",
+            "address": "Darko.Dominovic@crs.hr"
+          }
+        },
+        "from": {
+          "emailAddress": {
+            "name": "Darko Dominovic",
+            "address": "Darko.Dominovic@crs.hr"
+          }
+        },
+        "toRecipients": [
+          {
+            "emailAddress": {
+              "name": "KR SDTP",
+              "address": "krsdtp@krs.co.kr"
+            }
+          }
+        ],
+        "ccRecipients": [],
+        "bccRecipients": [],
+        "replyTo": [],
+        "body": {
+          "contentType": "html",
+          "content": "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"></head><body><div><div style=\"font-family: Calibri, Arial, Helvetica, sans-serif; font-size: 12pt; color: rgb(0, 0, 0);\">Dear Colleagues,</div><div style=\"font-family: Calibri, Arial, Helvetica, sans-serif; font-size: 12pt; color: rgb(0, 0, 0);\"><br></div><div style=\"font-family: Calibri, Arial, Helvetica, sans-serif; font-size: 12pt; color: rgb(0, 0, 0);\">Please find attached the document MSC 110/5 - Amendments to the International Code for the Construction and Equipment of Ships Carrying Dangerous Chemicals in Bulk (IBC Code).</div><div style=\"font-family: Calibri, Arial, Helvetica, sans-serif; font-size: 12pt; color: rgb(0, 0, 0);\"><br></div><div style=\"font-family: Calibri, Arial, Helvetica, sans-serif; font-size: 12pt; color: rgb(0, 0, 0);\">Best regards,</div><div style=\"font-family: Calibri, Arial, Helvetica, sans-serif; font-size: 12pt; color: rgb(0, 0, 0);\">Darko Dominovic</div></body></html>"
+        }
+      },
+      {
+        "id": "AAMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OABGAAAAAAAiQ8W967B7TKBjgx9rVEURBwAiIsqMbYjsT5e-T7KzowPTAAAAAAEMAAAiIsqMbYjsT5e-T7KzowPTAAAYEJk1AAA=",
+        "createdDateTime": "2025-05-29T02:01:55Z",
+        "lastModifiedDateTime": "2025-05-29T02:01:56Z",
+        "changeKey": "CQAAABYAAAAiIsqMbYjsT5e-T7KzowPTAAAYEJlB",
+        "categories": [],
+        "receivedDateTime": "2025-05-29T02:01:55Z",
+        "sentDateTime": "2025-05-29T02:01:54Z",
+        "hasAttachments": false,
+        "internetMessageId": "<PL25008aKRd-2@crs.hr>",
+        "subject": "RE: PL25008aKRd - Maritime Safety Committee Updates",
+        "bodyPreview": "Thank you for the update on maritime safety regulations. We will review the amendments and provide feedback accordingly.",
+        "importance": "normal",
+        "parentFolderId": "AQMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OAAuAAADIkPFveuwe0ygY4Mfa1RFEQEAIiLKjG2I7E-Xvk-ys6MD0wAAAQIBAAAA",
+        "conversationId": "AAQkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OAAQAOKjp_KhH0SLkrYO2XkOqpQ=",
+        "conversationIndex": "AQHbpWjC4qOn8qEfRIuStg7ZeQ6qlAABNwGA",
+        "isDeliveryReceiptRequested": false,
+        "isReadReceiptRequested": false,
+        "isRead": true,
+        "isDraft": false,
+        "webLink": "https://outlook.office365.com/owa/?ItemID=AAMkAGVmMDEzMTM4LTZmYWUtNDdkNC1hMDZiLTU1OGY5OTZhYmY4OABGAAAAAAAiQ8W967B7TKBjgx9rVEURBwAiIsqMbYjsT5e-T7KzowPTAAAAAAEMAAAiIsqMbYjsT5e-T7KzowPTAAAYEJk1AAA%3D&exvsurl=1&viewmodel=ReadMessageItem",
+        "sender": {
+          "emailAddress": {
+            "name": "KR SDTP",
+            "address": "krsdtp@krs.co.kr"
+          }
+        },
+        "from": {
+          "emailAddress": {
+            "name": "KR SDTP",
+            "address": "krsdtp@krs.co.kr"
+          }
+        },
+        "toRecipients": [
+          {
+            "emailAddress": {
+              "name": "Darko Dominovic",
+              "address": "Darko.Dominovic@crs.hr"
+            }
+          }
+        ],
+        "ccRecipients": [],
+        "bccRecipients": [],
+        "replyTo": [],
+        "body": {
+          "contentType": "text",
+          "content": "Thank you for the update on maritime safety regulations. We will review the amendments and provide feedback accordingly.\n\nRegards,\nKR SDTP Team"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "source": "test",
+    "batch_id": "test-batch-1"
+  }
+}

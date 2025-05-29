@@ -415,11 +415,104 @@ class QdrantVectorStoreAdapter(VectorStorePort):
             print(f"❌ Failed to get embeddings for document {document_id}: {e}")
             return []
     
+    async def get_all_embeddings(self, collection_name: str, limit: int = 1000, offset: int = 0) -> List[Embedding]:
+        """Get all embeddings from a collection with pagination."""
+        try:
+            # Use scroll to get all points
+            search_results = self.client.scroll(
+                collection_name=collection_name,
+                limit=limit,
+                offset=offset,
+                with_payload=True,
+                with_vectors=True
+            )
+            
+            embeddings = []
+            points = search_results[0] if search_results else []  # scroll returns (points, next_page_offset)
+            
+            for point in points:
+                payload = point.payload
+                
+                # Use original embedding ID if available
+                original_id = payload.get("original_embedding_id", str(point.id))
+                
+                # Parse created_at from ISO format
+                created_at_str = payload.get("created_at")
+                created_at = datetime.fromisoformat(created_at_str) if created_at_str else datetime.utcnow()
+                
+                # Get metadata from payload
+                metadata = payload.get("metadata", {})
+                
+                # For email data, ensure all fields are properly accessible
+                # The metadata already contains all the email fields
+                if "email_id" in metadata:
+                    # It's already in the right format
+                    pass
+                else:
+                    # Add document_id as email_id if not present
+                    metadata["email_id"] = payload.get("document_id")
+                
+                # Ensure content is available at top level
+                if "content" not in metadata and "content" in payload:
+                    metadata["content"] = payload.get("content", "")
+                
+                embedding = Embedding(
+                    id=original_id,
+                    document_id=payload["document_id"],
+                    chunk_id=payload["chunk_id"],
+                    vector=point.vector,
+                    model=payload.get("model", "unknown"),
+                    dimension=payload.get("dimension", len(point.vector)),
+                    metadata=metadata,
+                    created_at=created_at
+                )
+                embeddings.append(embedding)
+            
+            print(f"✅ Retrieved {len(embeddings)} embeddings from {collection_name}")
+            return embeddings
+            
+        except Exception as e:
+            print(f"❌ Failed to get all embeddings from {collection_name}: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
     async def count_embeddings(self, collection_name: str) -> int:
         """Count total number of embeddings in the collection."""
         try:
-            collection_info = self.client.get_collection(collection_name)
-            return collection_info.points_count
+            # Use scroll with proper next_page_offset handling (Qdrant official way)
+            count = 0
+            next_page_offset = None
+            batch_size = 100
+            max_iterations = 1000  # Safety limit to prevent infinite loops
+            iterations = 0
+            
+            while iterations < max_iterations:
+                iterations += 1
+                
+                # Use scroll API correctly according to Qdrant documentation
+                result = self.client.scroll(
+                    collection_name=collection_name,
+                    limit=batch_size,
+                    offset=next_page_offset,  # Use next_page_offset from previous result
+                    with_payload=False,
+                    with_vectors=False
+                )
+                
+                if not result or len(result) < 2:
+                    break
+                    
+                points, next_page_offset = result[0], result[1]
+                count += len(points)
+                
+                # If no more points or no next page offset, we're done
+                if len(points) == 0 or next_page_offset is None:
+                    break
+            
+            if iterations >= max_iterations:
+                print(f"⚠️ Warning: count_embeddings hit max iterations limit for {collection_name}")
+            
+            return count
         except Exception as e:
             print(f"❌ Failed to count embeddings: {e}")
             return 0
@@ -427,14 +520,15 @@ class QdrantVectorStoreAdapter(VectorStorePort):
     async def get_collection_info(self, collection_name: str) -> Dict[str, Any]:
         """Get information about a collection."""
         try:
-            collection_info = self.client.get_collection(collection_name)
+            # Basic info without using get_collection due to Pydantic issues
+            count = await self.count_embeddings(collection_name)
             
             return {
                 "name": collection_name,
-                "vector_dimension": collection_info.config.params.vectors.size,
-                "distance_metric": collection_info.config.params.vectors.distance.name,
-                "points_count": collection_info.points_count,
-                "status": collection_info.status.name
+                "vector_dimension": self.vector_dimension,
+                "distance_metric": self.distance_metric,
+                "points_count": count,
+                "status": "active"
             }
             
         except Exception as e:

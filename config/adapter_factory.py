@@ -305,3 +305,70 @@ class DependencyContainer:
 # 전역 의존성 컨테이너 (설정 기반 자동 초기화)
 from config.settings import config as global_config
 container = DependencyContainer(global_config)
+
+
+# FastAPI 의존성 주입 함수들
+def get_vector_store() -> VectorStorePort:
+    """FastAPI 의존성 주입용 벡터 저장소 함수"""
+    return container.vector_store
+
+
+def get_embedding_model() -> EmbeddingModelPort:
+    """FastAPI 의존성 주입용 임베딩 모델 함수"""
+    return container.embedding_model
+
+
+def get_document_loader() -> DocumentLoaderPort:
+    """FastAPI 의존성 주입용 문서 로더 함수"""
+    return container.document_loader
+
+
+def get_text_chunker() -> TextChunkerPort:
+    """FastAPI 의존성 주입용 텍스트 청킹 함수"""
+    return container.text_chunker
+
+
+def get_retriever() -> RetrieverPort:
+    """FastAPI 의존성 주입용 리트리버 함수"""
+    return container.retriever
+
+
+def get_config() -> ConfigPort:
+    """FastAPI 의존성 주입용 설정 함수"""
+    return global_config
+
+
+# UseCase 의존성 주입 함수들
+def get_document_retrieval_use_case():
+    """FastAPI 의존성 주입용 문서 검색 유스케이스 함수"""
+    from core.usecases.document_retrieval import DocumentRetrievalUseCase
+    return DocumentRetrievalUseCase(
+        retriever=container.retriever,
+        embedding_model=container.embedding_model,
+        vector_store=container.vector_store,
+        config=global_config
+    )
+
+
+def get_email_retrieval_use_case():
+    """FastAPI 의존성 주입용 이메일 검색 유스케이스 함수"""
+    from core.usecases.email_retrieval import EmailRetrievalUseCase
+    return EmailRetrievalUseCase(
+        vector_store=container.vector_store,
+        embedding_model=container.embedding_model,
+        config=global_config
+    )
+
+
+def get_email_processing_use_case():
+    """FastAPI 의존성 주입용 이메일 처리 유스케이스 함수"""
+    from core.usecases.email_processing import EmailProcessingUseCase
+    from adapters.email.json_email_loader import JsonEmailLoaderAdapter
+    
+    email_loader = JsonEmailLoaderAdapter()
+    return EmailProcessingUseCase(
+        email_loader=email_loader,
+        embedding_model=container.embedding_model,
+        vector_store=container.vector_store,
+        config=global_config
+    )

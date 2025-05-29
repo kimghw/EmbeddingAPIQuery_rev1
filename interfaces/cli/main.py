@@ -9,13 +9,10 @@ from pathlib import Path
 from typing import Optional
 
 from config.settings import config
-from adapters.pdf.pdf_loader import PdfLoaderAdapter
-from adapters.embedding.text_chunker import RecursiveTextChunkerAdapter
-from adapters.embedding.openai_embedding import OpenAIEmbeddingAdapter
-from adapters.vector_store.qdrant_vector_store import QdrantVectorStoreAdapter
-from adapters.vector_store.simple_retriever import SimpleRetrieverAdapter
+from config.adapter_factory import AdapterFactory
 from core.usecases.document_processing import DocumentProcessingUseCase
 from core.usecases.document_retrieval import DocumentRetrievalUseCase
+from interfaces.cli.email_commands import email
 
 
 @click.group()
@@ -24,53 +21,62 @@ def cli():
     pass
 
 
+# Add email commands group
+cli.add_command(email)
+
+
 @cli.command()
 @click.option('--file-path', required=True, help='Path to the PDF file to process')
 @click.option('--output', default=None, help='Output file for results (JSON)')
-@click.option('--use-qdrant', is_flag=True, default=True, help='Use Qdrant vector store (default: True)')
-def process_document(file_path: str, output: Optional[str], use_qdrant: bool):
+@click.option('--chunker', type=click.Choice(['recursive', 'semantic']), default='semantic', help='Text chunker type')
+@click.option('--embedding', type=click.Choice(['openai', 'huggingface']), default='openai', help='Embedding model type')
+@click.option('--vector-store', type=click.Choice(['qdrant', 'faiss', 'mock']), default='qdrant', help='Vector store type')
+@click.option('--loader', type=click.Choice(['pdf', 'json', 'web', 'unstructured']), default='pdf', help='Document loader type')
+def process_document(file_path: str, output: Optional[str], chunker: str, embedding: str, vector_store: str, loader: str):
     """Process a single document: load, chunk, and embed."""
     
     async def _process():
         try:
-            # Initialize adapters
-            pdf_loader = PdfLoaderAdapter()
-            text_chunker = RecursiveTextChunkerAdapter(
-                chunk_size=config.get_chunk_size(),
-                chunk_overlap=config.get_chunk_overlap()
-            )
-            embedding_model = OpenAIEmbeddingAdapter(config)
+            # Initialize adapter factory
+            factory = AdapterFactory()
             
-            # Choose vector store
-            if use_qdrant:
-                vector_store = QdrantVectorStoreAdapter(
-                    host="localhost",
-                    port=6333,
-                    vector_dimension=config.get_vector_dimension()
-                )
-                
-                # Check Qdrant health
-                is_healthy = await vector_store.health_check()
+            click.echo(f"🔧 Initializing adapters...")
+            click.echo(f"   Loader: {loader}")
+            click.echo(f"   Chunker: {chunker}")
+            click.echo(f"   Embedding: {embedding}")
+            click.echo(f"   Vector Store: {vector_store}")
+            
+            # Create adapters using factory
+            document_loader = factory.create_document_loader_adapter(loader)
+            text_chunker = factory.create_text_chunker_adapter(
+                chunker, 
+                chunk_size=config.get_chunk_size(),
+                chunk_overlap=config.get_chunk_overlap(),
+                config=config
+            )
+            embedding_model = factory.create_embedding_adapter(embedding, config)
+            vector_store_adapter = factory.create_vector_store_adapter(vector_store)
+            
+            # Health check for external services
+            if vector_store in ['qdrant']:
+                is_healthy = await vector_store_adapter.health_check()
                 if not is_healthy:
-                    click.echo("❌ Qdrant is not accessible. Make sure Qdrant server is running:")
-                    click.echo("   docker run -p 6333:6333 qdrant/qdrant")
-                    click.echo("   Or use --no-use-qdrant flag to use mock storage")
+                    click.echo(f"❌ {vector_store.title()} is not accessible. Make sure the server is running.")
+                    if vector_store == 'qdrant':
+                        click.echo("   docker run -p 6333:6333 qdrant/qdrant")
+                    click.echo("   Or use --vector-store mock for testing")
                     return
-            else:
-                from adapters.vector_store.mock_vector_store import MockVectorStoreAdapter
-                vector_store = MockVectorStoreAdapter()
             
             # Create use case
             use_case = DocumentProcessingUseCase(
-                document_loader=pdf_loader,
+                document_loader=document_loader,
                 text_chunker=text_chunker,
                 embedding_model=embedding_model,
-                vector_store=vector_store,
+                vector_store=vector_store_adapter,
                 config=config
             )
             
-            click.echo(f"Processing document: {file_path}")
-            click.echo(f"Using vector store: {'Qdrant' if use_qdrant else 'Mock'}")
+            click.echo(f"\n📄 Processing document: {file_path}")
             
             # Process document
             result = await use_case.process_document_from_file(file_path)
@@ -103,42 +109,49 @@ def process_document(file_path: str, output: Optional[str], use_qdrant: bool):
 @click.option('--query', required=True, help='Search query text')
 @click.option('--top-k', default=5, help='Number of results to return')
 @click.option('--output', default=None, help='Output file for results (JSON)')
-def search_documents(query: str, top_k: int, output: Optional[str]):
+@click.option('--embedding', type=click.Choice(['openai', 'huggingface']), default='openai', help='Embedding model type')
+@click.option('--vector-store', type=click.Choice(['qdrant', 'faiss', 'mock']), default='qdrant', help='Vector store type')
+@click.option('--retriever', type=click.Choice(['simple', 'ensemble']), default='simple', help='Retriever type')
+def search_documents(query: str, top_k: int, output: Optional[str], embedding: str, vector_store: str, retriever: str):
     """Search for documents using text query."""
     
     async def _search():
         try:
-            # Initialize adapters
-            embedding_model = OpenAIEmbeddingAdapter(config)
-            vector_store = QdrantVectorStoreAdapter(
-                host="localhost",
-                port=6333,
-                vector_dimension=config.get_vector_dimension()
-            )
+            # Initialize adapter factory
+            factory = AdapterFactory()
             
-            # Check Qdrant health
-            is_healthy = await vector_store.health_check()
-            if not is_healthy:
-                click.echo("❌ Qdrant is not accessible. Make sure Qdrant server is running:")
-                click.echo("   docker run -p 6333:6333 qdrant/qdrant")
-                return
+            click.echo(f"🔧 Initializing search components...")
+            click.echo(f"   Embedding: {embedding}")
+            click.echo(f"   Vector Store: {vector_store}")
+            click.echo(f"   Retriever: {retriever}")
             
-            # Initialize retriever
-            retriever = SimpleRetrieverAdapter(
-                vector_store=vector_store,
-                embedding_model=embedding_model
-            )
-            
-            # Create retrieval use case
-            retrieval_use_case = DocumentRetrievalUseCase(
-                retriever=retriever,
+            # Create adapters using factory
+            embedding_model = factory.create_embedding_adapter(embedding, config)
+            vector_store_adapter = factory.create_vector_store_adapter(vector_store)
+            retriever_adapter = factory.create_retriever_adapter(
+                retriever, 
+                vector_store=vector_store_adapter, 
                 embedding_model=embedding_model,
-                vector_store=vector_store,
                 config=config
             )
             
-            click.echo(f"Searching for: '{query}'")
-            click.echo(f"Top-K results: {top_k}")
+            # Health check for external services
+            if vector_store in ['qdrant']:
+                is_healthy = await vector_store_adapter.health_check()
+                if not is_healthy:
+                    click.echo(f"❌ {vector_store.title()} is not accessible. Make sure the server is running.")
+                    return
+            
+            # Create retrieval use case
+            retrieval_use_case = DocumentRetrievalUseCase(
+                retriever=retriever_adapter,
+                embedding_model=embedding_model,
+                vector_store=vector_store_adapter,
+                config=config
+            )
+            
+            click.echo(f"\n🔍 Searching for: '{query}'")
+            click.echo(f"   Top-K results: {top_k}")
             
             # Search documents
             result = await retrieval_use_case.search_documents(
@@ -146,29 +159,29 @@ def search_documents(query: str, top_k: int, output: Optional[str]):
                 top_k=top_k
             )
             
-            if result["success"]:
-                results = result["results"]
+            if result.success:
+                results = result.results
                 click.echo(f"✅ Found {len(results)} relevant documents")
-                click.echo(f"   Query ID: {result['query_id']}")
-                click.echo(f"   Collection: {result['collection_name']}")
-                click.echo(f"   Retriever: {result['retriever_type']}")
+                click.echo(f"   Query ID: {result.query_id}")
+                click.echo(f"   Collection: {result.collection_name}")
+                click.echo(f"   Retriever: {result.retriever_type}")
                 
                 for i, doc_result in enumerate(results, 1):
                     click.echo(f"\n   Result {i}:")
-                    click.echo(f"     Score: {doc_result['score']:.4f}")
-                    click.echo(f"     Rank: {doc_result['rank']}")
-                    click.echo(f"     Document ID: {doc_result['document_id']}")
-                    click.echo(f"     Chunk ID: {doc_result['chunk_id']}")
+                    click.echo(f"     Score: {doc_result.score:.4f}")
+                    click.echo(f"     Rank: {doc_result.rank}")
+                    click.echo(f"     Document ID: {doc_result.document_id}")
+                    click.echo(f"     Chunk ID: {doc_result.chunk_id}")
                     
                     # Show content preview
-                    content = doc_result['content']
+                    content = doc_result.content
                     content_preview = content[:200] + "..." if len(content) > 200 else content
                     click.echo(f"     Content: {content_preview}")
                     
-                    if doc_result['metadata']:
-                        click.echo(f"     Metadata: {doc_result['metadata']}")
+                    if doc_result.metadata:
+                        click.echo(f"     Metadata: {doc_result.metadata}")
             else:
-                click.echo(f"❌ Search failed: {result['error']}")
+                click.echo(f"❌ Search failed: {getattr(result, 'error', 'Unknown error')}")
                 return
             
             # Save results if output specified

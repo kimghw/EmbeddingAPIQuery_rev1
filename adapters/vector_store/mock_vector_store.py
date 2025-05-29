@@ -10,10 +10,15 @@ from core.ports.vector_store import VectorStorePort
 class MockVectorStoreAdapter(VectorStorePort):
     """Mock vector store adapter for testing without external dependencies."""
     
+    # Shared storage across all instances (singleton pattern)
+    _shared_collections: Dict[str, Dict[str, Any]] = {}
+    _shared_embeddings: Dict[str, Dict[str, Embedding]] = {}
+    
     def __init__(self):
         """Initialize mock vector store."""
-        self.collections: Dict[str, Dict[str, Any]] = {}
-        self.embeddings: Dict[str, Dict[str, Embedding]] = {}
+        # Use shared storage to maintain data across instances
+        self.collections = MockVectorStoreAdapter._shared_collections
+        self.embeddings = MockVectorStoreAdapter._shared_embeddings
     
     async def create_collection(self, collection_name: str, dimension: int, metadata: Optional[Dict[str, Any]] = None) -> bool:
         """Create a new collection in the vector store."""
@@ -138,6 +143,8 @@ class MockVectorStoreAdapter(VectorStorePort):
                 rank=i + 1,
                 metadata=embedding.metadata
             )
+            # Add embedding reference for compatibility
+            result.embedding = embedding
             results.append(result)
         
         return results
@@ -194,3 +201,63 @@ class MockVectorStoreAdapter(VectorStorePort):
     async def optimize_collection(self, collection_name: str) -> bool:
         """Optimize the collection for better performance."""
         return collection_name in self.collections
+    
+    async def search_with_filter(
+        self,
+        query_vector: Optional[List[float]] = None,
+        collection_name: str = None,
+        filter_conditions: Optional[Dict[str, Any]] = None,
+        limit: int = 10
+    ) -> List[RetrievalResult]:
+        """Search with filter conditions (mock implementation)."""
+        if collection_name not in self.collections:
+            return []
+        
+        # Get all embeddings
+        embeddings_list = list(self.embeddings[collection_name].values())
+        
+        # Apply filters
+        if filter_conditions:
+            filtered_embeddings = []
+            for embedding in embeddings_list:
+                match = True
+                for key, value in filter_conditions.items():
+                    if embedding.metadata.get(key) != value:
+                        match = False
+                        break
+                if match:
+                    filtered_embeddings.append(embedding)
+            embeddings_list = filtered_embeddings
+        
+        # Limit results
+        embeddings_list = embeddings_list[:limit]
+        
+        # Create RetrievalResult objects
+        results = []
+        for i, embedding in enumerate(embeddings_list):
+            # Mock similarity score
+            score = 0.95 - (i * 0.05) if query_vector else 0.8
+            
+            # Get content from metadata
+            content = embedding.metadata.get('content', f"Mock content for chunk {embedding.chunk_id}")
+            
+            result = RetrievalResult.create(
+                document_id=embedding.document_id,
+                chunk_id=embedding.chunk_id,
+                content=content,
+                score=score,
+                rank=i + 1,
+                metadata=embedding.metadata
+            )
+            # Add embedding reference for compatibility
+            result.embedding = embedding
+            results.append(result)
+        
+        return results
+    
+    async def get_all_embeddings(self, collection_name: str) -> List[Embedding]:
+        """Get all embeddings from a collection."""
+        if collection_name not in self.collections:
+            return []
+        
+        return list(self.embeddings[collection_name].values())
